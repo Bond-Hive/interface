@@ -84,32 +84,44 @@ export default function Home() {
 
     return apyRandom[randomFigure];
   };
-
   const [pools, setPools] = useState(pool);
   // console.log({pools, selectedNetwork})
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await GetAPY("https://bondexecution.onrender.com/monitoring/getYields");
-      setPools((prevPools: any) => {
-        const updatedPools = prevPools.map((pool: any) => {
-          const activePool = data?.data.find((activePool: any) => activePool?.symbolFuture === pool?.symbolFuture)
-
-            return {
-              ...pool,
-              apy: activePool?.averageYieldPostExecution?.upper || "expired"
-            }
-        })
-        return updatedPools.sort((a: any, b: any) => (a.apy === "expired" ? 1 : -1))
-      }
+      const { data } = await GetAPY(
+        "https://bondexecution.onrender.com/monitoring/getYields"
       );
-    };
+      if (data) {
+
+        const extractedApys = data?.data.map((poolApy: any) => {
+          return {
+            apy: poolApy?.averageYieldPostExecution?.upper || "expired",
+          };
+        });
+
+        setPools((prevPools: any) => {
+          const updatedPools = prevPools.map((pool: any, poolIndex: number) => {
+            const activePool = extractedApys.find((_:any, index: number) => index === poolIndex)
   
+              return {
+                ...pool,
+                apy: activePool?.apy
+              }
+          })
+          // return updatedPools.sort((a: any, b: any) => (a.apy === "expired" ? 1 : -1))
+          return updatedPools
+        }
+        );
+      }
+
+    };
+
     // Initial fetch
     fetchData();
-  
+
     // Fetch every 10 seconds
     const interval = setInterval(fetchData, 10000);
-  
+
     return () => clearInterval(interval);
   }, []);
 

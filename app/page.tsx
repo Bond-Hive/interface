@@ -1,776 +1,606 @@
-"use client";
-import Image from "next/image";
-import {
-  ApyArrowIcon,
-  ArrowRight,
-  BTCBgLogo,
-  Calendar,
-  ChervonUp,
-  Dot,
-  EthBgWhiteLogo,
-  StellarBrand,
-  TransparentIcon,
-  UsdcBgLogo,
-  Vector1,
-  Vector2,
-  Vector3,
-  Vector4,
-  chervonRight,
-} from "./components/assets";
-import Partners from "./components/UI-assets/partners/partners";
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import Footer from "./components/navigations/footer";
-import { EcpliseGlow, MediumChartBg } from "./components/assets/bg";
-import Header from "./components/navigations/header";
-import Link from "next/link";
-import OurProducts from "./components/UI-assets/ourProducts";
-import { ChevronRightIcon, LockClosedIcon, SwatchIcon } from "@heroicons/react/24/outline";
-import {GetAPY} from "./dataService/dataServices";
-import { pool } from "./constants/poolOptions";
-import UseStore from "@/store/UseStore";
- const getAnimationVariants = (delay: Number) => {
-  const variants: any = {
-    in: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.4, ease: "easeInOut", delay: delay },
-    },
-    out: {
-      y: 20, // adjust as needed
-      opacity: 0,
-    },
-  };
-  return variants;
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Code2, DollarSign, FileText, Send, Globe, MapPin, Users, Building, Award, Mail} from "lucide-react"
+import Link from "next/link"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { useState } from "react"
+
+// Form validation schema
+const contactFormSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  message: z.string().min(10, 'Message must be at least 10 characters'),
+});
+
+type ContactFormData = z.infer<typeof contactFormSchema>;
+
+// Smooth scroll function
+const scrollToContact = () => {
+  const contactSection = document.getElementById('contact');
+  if (contactSection) {
+    contactSection.scrollIntoView({ behavior: 'smooth' });
+  }
 };
-export default function Home() {
-  const {setAllPools,selectedNetwork} = UseStore()
-  const cardHoverVariants = {
-    in: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.4, ease: "easeInOut", delay: 1.1 },
-    },
-    out: {
-      y: 20, // adjust as needed
-      opacity: 0,
-    },
-    hover: {
-      y: -10,
-      transition: { duration: 0.3, ease: "easeInOut", delay: 0 },
-    },
-  };
-  const heroRef: any = useRef(null);
-  const featuresRef: any = useRef(null);
-  const howItWorksRef: any = useRef(null);
-  const chartRef: any = useRef(null);
-  const historyYield1: any = useRef(null);
-  const historyYield2: any = useRef(null);
-  const faqRef: any = useRef(null);
-  const becomeRef: any = useRef(null);
-  const hreoIsInView = useInView(heroRef);
-  const featuresIsInView = useInView(featuresRef);
-  const howItWorksRefIsInView = useInView(howItWorksRef);
-  const chartIsInView = useInView(chartRef);
-  const historyYield1InView = useInView(historyYield1);
-  const historyYield2InView = useInView(historyYield2);
-  const faqInView = useInView(faqRef);
-  const becomeInView = useInView(becomeRef);
 
-  const apyRandom = [
-    12.20, 13.08, 11.96, 12.83, 12.19, 13.07, 11.96, 12.82, 12.84];
-  const getRandomApy = () => {
-    let randomFigure = Math.floor(Math.random() * apyRandom.length);
+export default function BondHiveLanding() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    return apyRandom[randomFigure];
-  };
-  const [pools, setPools] = useState(pool);
-  // console.log({pools, selectedNetwork})
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await GetAPY(
-        "https://bondexecution.onrender.com/monitoring/getYields"
-      );
-      if (data) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema),
+  });
 
-        const extractedApys = data?.data.map((poolApy: any) => {
-          return {
-            apy: poolApy?.averageYieldPostExecution?.upper || "expired",
-          };
-        });
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true);
+    setSubmitMessage(null);
 
-        setPools((prevPools: any) => {
-          const updatedPools = prevPools.map((pool: any, poolIndex: number) => {
-            const activePool = extractedApys.find((_:any, index: number) => index === poolIndex)
-  
-              return {
-                ...pool,
-                apy: activePool?.apy
-              }
-          })
-          // return updatedPools.sort((a: any, b: any) => (a.apy === "expired" ? 1 : -1))
-          return updatedPools
-        }
-        );
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSubmitMessage({ type: 'success', text: 'Message sent successfully! We\'ll get back to you soon.' });
+        reset();
+      } else {
+        setSubmitMessage({ type: 'error', text: result.error || 'Failed to send message. Please try again.' });
       }
-
-    };
-
-    // Initial fetch
-    fetchData();
-
-    // Fetch every 10 seconds
-    const interval = setInterval(fetchData, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
+    } catch (error) {
+      setSubmitMessage({ type: 'error', text: 'Failed to send message. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <>
-      {/* <div className="w-full h-10 bg-red-600 md:max-lg:flex hidden max-sm:bg-blue-500 max-sm:flex"></div> */}
-      <Header />
-      <main className="w-full md:pt-24 pt-16 z-[99]  max-w-[1500px] mx-auto">
-        {/* DAPP */}
-        <div className="pb-20" ref={heroRef}>
-          {/* <motion.div
-            className="tag flex items-center justify-between p-1 shadowBackDrop mx-auto"
-            variants={getAnimationVariants(0)}
-            initial="out"
-            animate={hreoIsInView ? "in" : "out"}
-          >
-            <p className="inner-tag text-center shadowBackDrop w-[102.55px] h-[24px]">
-              Latest release
-            </p>
-            <p>Bondhive a greater dApp</p>
-            <Image
-              src={ArrowRight}
-              width={13}
-              height={13}
-              alt="right"
-              className="arrow"
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 relative overflow-hidden">
+      {/* Enhanced Background with patterns similar to presentation */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Main gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-700"></div>
+        
+        {/* Enhanced Flowing wave patterns with better animations */}
+        <div className="absolute inset-0">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" fill="none" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor: "rgba(255, 255, 255, 0.15)", stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: "rgba(255, 255, 255, 0.08)", stopOpacity: 1}} />
+              </linearGradient>
+              <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor: "rgba(255, 255, 255, 0.12)", stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: "rgba(255, 255, 255, 0.04)", stopOpacity: 1}} />
+              </linearGradient>
+              <linearGradient id="wave3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor: "rgba(255, 255, 255, 0.08)", stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: "rgba(255, 255, 255, 0.02)", stopOpacity: 1}} />
+              </linearGradient>
+            </defs>
+            
+            {/* Large flowing curves with enhanced animations */}
+            <path
+              d="M-200 100 Q300 50 600 150 Q900 250 1400 100 L1400 0 L-200 0 Z"
+              fill="url(#wave1)"
+              className="animate-pulse"
+              style={{
+                animationDuration: '8s',
+                transformOrigin: 'center',
+                animation: 'pulse 8s ease-in-out infinite, float 12s ease-in-out infinite'
+              }}
             />
-          </motion.div> */}
+            <path
+              d="M-200 300 Q200 200 500 280 Q800 360 1400 220 L1400 100 Q900 250 600 150 Q300 50 -200 100 Z"
+              fill="url(#wave2)"
+              style={{
+                animationDuration: '15s',
+                animation: 'pulse 15s ease-in-out infinite reverse, float 18s ease-in-out infinite'
+              }}
+            />
+            <path
+              d="M-200 500 Q400 400 700 480 Q1000 560 1400 400 L1400 220 Q800 360 500 280 Q200 200 -200 300 Z"
+              fill="url(#wave3)"
+              style={{
+                animation: 'pulse 20s ease-in-out infinite, float 25s ease-in-out infinite reverse'
+              }}
+            />
+            
+            {/* Enhanced Elliptical patterns with rotation animations */}
+            <ellipse 
+              cx="300" cy="200" rx="150" ry="80" 
+              fill="rgba(255, 255, 255, 0.08)" 
+              transform="rotate(-20 300 200)"
+              style={{
+                animation: 'spin 30s linear infinite, pulse 12s ease-in-out infinite'
+              }}
+            />
+            <ellipse 
+              cx="900" cy="400" rx="200" ry="100" 
+              fill="rgba(255, 255, 255, 0.06)" 
+              transform="rotate(15 900 400)"
+              style={{
+                animation: 'spin 45s linear infinite reverse, pulse 18s ease-in-out infinite'
+              }}
+            />
+            <ellipse 
+              cx="600" cy="600" rx="180" ry="90" 
+              fill="rgba(255, 255, 255, 0.1)" 
+              transform="rotate(-10 600 600)"
+              style={{
+                animation: 'spin 35s linear infinite, pulse 15s ease-in-out infinite'
+              }}
+            />
+          </svg>
+        </div>
 
-          <div className="w-full mt-14 hero_text flex flex-col justify-center items-center">
-            <motion.h1
-              className="big_text md:text-[50px] text-[42px] md:w-7/12 md:max-lg:w-10/12  md:leading-[66px] leading-[50px] "
-              variants={getAnimationVariants(0.3)}
-              initial="out"
-              animate={hreoIsInView ? "in" : "out"}
-            >
-              Secure Your Returns with <span>On-Chain Crypto Bonds</span>
-            </motion.h1>
-            <motion.p
-              className="des mt-4 md:w-7/12 max-md:px-3 md:max-lg:w-9/12"
-              variants={getAnimationVariants(0.6)}
-              initial="out"
-              animate={hreoIsInView ? "in" : "out"}
-            >
-              Harness the power of futures spread trading with Bondhive&#39;s Crypto Bonds which offer a straightforward way to invest with fixed terms and guaranteed yields, similar to traditional bank deposits
-            </motion.p>
-          </div>
-          {/* <div className="preview mx-auto  bg-black">
-            // should be inside preview-container
-          // </div> */}
-          <Link href={"/app"} target="_blank">
-            <motion.div
-              className="preview-container w-full relative mt-20 relative cursor-pointer"
-              variants={cardHoverVariants}
-              initial="out"
-              animate={hreoIsInView ? "in" : "out"}
-              whileHover="hover"
-            >
-              <div className="preview mx-auto relative md:w-10/12 w-11/12">
-                <div className="table_pool_container_mobile md:grid grid-cols-2 gap-10">
-                  {pools.map((pool:any, index:any) => (
-                    <div
-                      className="table_pool_container p-5 text-secText bg-dappHeaderBg border-border_pri border rounded-md max-md:mb-5"
-                      key={`${index}--pool`}
-                    >
-                      <div className="flex border-border_pri border-b pb-3 justify-between items-center">
-                        <div className="flex items-center mb-4 gap-2 ">
-                          <Image
-                            src={pool.img}
-                            width={38}
-                            height={38}
-                            alt="right"
-                            className=""
-                          />
-                          <div className="">
-                            <h1 className="text-white text-[18px]">
-                              {" "}
-                              {pool.name}
-                            </h1>
-                            {/* <p className="text-darkPrimText text-[10px] capitalize">
-                              {pool.name} Futures and Spot
-                            </p> */}
-                          </div>
-                        </div>
-                        <div className="APY text-blueish flex items-end gap-1 text-sm text-secText">
-                          <p>APY</p>
-                          <AnimatePresence mode="wait">
-                          <motion.h1
-                            className={`text-3xl font-bold  ${
-                              pool.apy == "expired"
-                                ? "text-red-600 uppercase"
-                                : "text-gold"
-                            }`}
-                            key={pool.apy}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                              {pool.apy}
-                          </motion.h1>
-                          </AnimatePresence>
+        {/* Additional glow effects */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[30%] left-[20%] w-32 h-32 bg-white/5 rounded-full blur-xl" 
+               style={{animation: 'pulse 8s ease-in-out infinite, float 12s ease-in-out infinite'}}></div>
+          <div className="absolute bottom-[40%] right-[25%] w-24 h-24 bg-white/8 rounded-full blur-2xl" 
+               style={{animation: 'pulse 10s ease-in-out infinite 2s, float 15s ease-in-out infinite'}}></div>
+          <div className="absolute top-[60%] left-[50%] w-40 h-40 bg-white/3 rounded-full blur-3xl" 
+               style={{animation: 'pulse 12s ease-in-out infinite 4s, float 18s ease-in-out infinite'}}></div>
+        </div>
+      </div>
 
-                          {/* <div className="time_tag flex items-center gap-1 py-[3px] px-[5px] w-[150px]">
-                        {" "}
-                        <Image
-                          src={ApyArrowIcon}
-                          width={14}
-                          height={14}
-                          alt="right"
-                          className=""
-                        />{" "}
-                        <p className="text-[12px] text-[#A586FE]">
-                          2.1% vs. last month
-                        </p>
-                      </div> */}
-                        </div>
-                      </div>
-                      <div className="text-[16px] py-4">
-                        <div className="maturity flex justify-between">
-                          <p className="">Maturity</p>
-                          <p className="text-white ">
-                              {pool.expiration}
-                          </p>
-                        </div>
-                        <div className="deposit_assets flex justify-between items-center my-4">
-                          <p className="">Deposit assets</p>
-                          <div className="Deposit_asset text-blueish  flex items-center gap-2">
-                            <div className="asset_logo">
-                              <Image
-                                src={UsdcBgLogo}
-                                width={25}
-                                height={25}
-                                alt="token-img"
-                                className="relative"
-                              />
-                            </div>
-                            <h1 className="text-[16px]">
-                              {pool.tokenSymbol}
-                            </h1>
-                          </div>
-                        </div>
-                        <div className="min_invest flex justify-between items-center">
-                          <p className="">Minimum Inv.</p>
-                          <p className=" text-blueish">
-                            ${pool.minimum}
-                            <span className="text-[13px] text-paraDarkText ml-2">
-                              - {pool.minimum} USDC
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        className={`w-full button2 flex items-center justify-center px-9 py-3 gap-1`}
-                        // onClick={() => setOpenState(true)}
-                      >
-                        <p className="text-sm">Launch dApp</p>
-                        <ChevronRightIcon className="w-[13px] h-[13px]"/>
-                      </button>
-                    </div>
-                  ))}
+      {/* Static Navigation - No longer sticky */}
+      <nav className="relative z-50 py-6">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {/* Correct BondHive Logo - SVG recreation */}
+              <div className="flex items-center space-x-3 group">
+                <div className="relative transform group-hover:scale-110 transition-transform duration-300">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="drop-shadow-lg">
+                    {/* Stacked ovals/hexagons logo */}
+                    <ellipse cx="20" cy="12" rx="18" ry="8" fill="rgba(255, 255, 255, 0.9)" />
+                    <ellipse cx="20" cy="20" rx="16" ry="7" fill="rgba(255, 255, 255, 0.7)" />
+                    <ellipse cx="20" cy="28" rx="18" ry="8" fill="rgba(255, 255, 255, 0.9)" />
+                    {/* Inner details */}
+                    <ellipse cx="20" cy="12" rx="12" ry="5" fill="rgba(255, 255, 255, 0.5)" />
+                    <ellipse cx="20" cy="28" rx="12" ry="5" fill="rgba(255, 255, 255, 0.5)" />
+                  </svg>
                 </div>
-              </div>
-              {/* <div className="ecplise_blur absolute top-40 left-1/2 transform -translate-x-1/2  lg:block hidden"></div>
-              <div className="w-full h-[386px] preview-shadow absolute -bottom-10 z-[999]"></div> */}
-            </motion.div>
-          </Link>
-        </div>
-
-        {/* How it works */}
-         <div className=" w-full relative pt-28" id="howitworks">
-          <div className="">
-            <Image
-              src={Vector1}
-              width={256}
-              height={176}
-              alt="right"
-              className="absolute left-[140px] max-md:left-0 right-0 top-[200px]"
-            />
-            <Image
-              src={Vector2}
-              width={256}
-              height={176}
-              alt="right"
-              className="absolute  right-[120px] top-[150px] max-md:hidden"
-            />
-            <Image
-              src={Vector3}
-              width={256}
-              height={176}
-              alt="right"
-              className="absolute max-md:hidden  left-[320px]  top-[550px]"
-            />
-            <Image
-              src={Vector4}
-              width={256}
-              height={176}
-              alt="right"
-              className="absolute  right-[310px] top-[550px] max-md:right-0"
-            />
-          </div>
-          <div
-            className="flex flex-col justify-center items-center"
-            ref={howItWorksRef}
-          >
-            <motion.div
-              className=""
-              variants={getAnimationVariants(0)}
-              initial="out"
-              animate={howItWorksRefIsInView ? "in" : "out"}
-            >
-              <Image
-                src={"/PNG/goldenBondhive.png"}
-                width={104}
-                height={104}
-                alt="right"
-                className=""
-              />
-            </motion.div>
-            <motion.h1
-              variants={getAnimationVariants(0.3)}
-              initial="out"
-              animate={howItWorksRefIsInView ? "in" : "out"}
-              className="medium_title my-4 md:text-[34px] text-2xl"
-            >
-              How It Works
-            </motion.h1>
-            <motion.p
-              variants={getAnimationVariants(0.6)}
-              initial="out"
-              animate={howItWorksRefIsInView ? "in" : "out"}
-              className="subtitle_p md:w-4/12 text-center px-6 md:px-0"
-            >
-              In markets where the price of futures contracts is higher than the
-              current market price, known as <i>“contango”</i>, investors have the
-              opportunity to profit from this disparity
-            </motion.p>
-          </div>
-          
-          <motion.div className="relative" ref={chartRef}>
-            <motion.div
-              variants={getAnimationVariants(0)}
-              initial="out"
-              animate={chartIsInView ? "in" : "out"}
-              className="chart mt-36 mx-auto w-7/12 max-md:w-11/12 h-[456px] max-md:h-[441px] max-sm:h-[370px]"
-            >
-              <motion.div
-                variants={getAnimationVariants(0.3)}
-                initial="out"
-                animate={chartIsInView ? "in" : "out"}
-                className="inner mx-auto -mt-32 absolute xCenter top-10 w-10/12 xl:h-[390px] max-md:h-[218px] h-[290px]"
-              >
-                <Image
-                  src={"/PNG/staticChartt.svg"}
-                  layout="fill"
-                  alt=""
-                  className="w-full rounded-t-lg object-center object-contain "
-                  objectFit="contain"
-                  objectPosition="center"
-                />
-              </motion.div>
-              <motion.div
-                variants={getAnimationVariants(0.6)}
-                initial="out"
-                animate={chartIsInView ? "in" : "out"}
-                className="subtitle_p xl:text-center absolute bottom-10 px-20 max-md:text-justify max-md:px-5 xl:leading-[26px] max-md:text-[16px]"
-              >
-                They can do this by selling futures contracts while
-                simultaneously buying the underlying asset at its current price,
-                thereby securing a guaranteed profit from the difference. If
-                this position is maintained until maturity, at which point the
-                prices converge, allowing investors to realize a profit from the
-                difference.
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-                  {/* Assured Profit */}
-        <div
-          className="flex flex-col justify-center items-center md:pt-32 mt-28 w-full relative"
-          id="features"
-          ref={featuresRef}
-        >
-          <motion.div className="flex flex-col justify-center items-center gap-2 max-md:px-5">
-            <motion.h1
-              className="medium_title text-center md:text-[44px] text-2xl md:leading-[51px]"
-              variants={getAnimationVariants(0)}
-              initial="out"
-              animate={featuresIsInView ? "in" : "out"}
-            >
-              Features
-            </motion.h1>
-          </motion.div>
-
-          <motion.div className="flex flex-wrap max-md:flex-col gap-7 md:mt-16 mt-10 assured_profit mx-auto relative px-5">
-            <Image
-              src={"/PNG/falling-light.png"}
-              width={1490}
-              height={330}
-              alt="right"
-              className="absolute left-0 right-0 top-5"
-            />
-            <motion.div
-              variants={getAnimationVariants(0.6)}
-              initial="out"
-              animate={featuresIsInView ? "in" : "out"}
-              className="card w-[363px] h-[146px] py- px-7"
-            >
-              <LockClosedIcon className="arrow my-3 mt-5 w-[23px] h-[24px] text-priText"/> 
-              <h2 className="text-priText mb-1">Secured Arbitrage</h2>
-              <p className="text-secText  text-[14px]">
-                Lock in yields with BondHives arbitrage strategy
-              </p>
-            </motion.div>
-            <motion.div
-              variants={getAnimationVariants(0.9)}
-              initial="out"
-              animate={featuresIsInView ? "in" : "out"}
-              className="card w-[363px] h-[146px] py- px-7"
-            >
-              <Image
-                src={TransparentIcon}
-                width={23}
-                height={24}
-                alt="right"
-                className="arrow my-3 mt-5"
-              />
-              <h2 className="text-priText mb-1">Liquidity in Secondary Market</h2>
-              <p className="text-secText  text-[14px]">
-              Trading and Bond buybacks provide liquidity to bond holders
-              </p>
-            </motion.div>
-            <motion.div
-              variants={getAnimationVariants(1.2)}
-              initial="out"
-              animate={featuresIsInView ? "in" : "out"}
-              className="card w-[363px] h-[146px] py- px-7"
-            >
-            <SwatchIcon className="arrow my-3 mt-5 w-[23px] h-[24px] text-priText"/> 
-              <h2 className="text-priText mb-1">Systematic Risk Mitigation</h2>
-              <p className="text-secText  text-[14px]">
-              Third party custodian provides off-exchange settlement
-              </p>
-            </motion.div>
-          </motion.div>
-        </div>
-          <div className=" pt-52 historical_yields" id="historicalyields">
-            <motion.div
-              ref={historyYield1}
-              variants={getAnimationVariants(0)}
-              initial="out"
-              animate={historyYield1InView ? "in" : "out"}
-              className="xl:w-[1060px] w-10/12 mx-auto md:flex justify-between items-center "
-            >
-              <h1 className="gradient_text md:w-[440px] md:text-[44px] text-[32px] md:leading-[58px] leading-[45px] max-md:mb-2 ">
-                Some amazing <span>Historical Yields</span>{" "}
-              </h1>
-              <p className="subtitle_p md:w-[455px]">
-                One could tap into the opportunity and enter positions that
-                yield consistently, even through bear markets, and find
-                significantly enhanced prospects during bull markets
-              </p>
-            </motion.div>
-            <div className="relative w-full md:max-lg:px-1" ref={historyYield2}>
-              <Image
-                src={"/PNG/falling-light2.png"}
-                width={1990}
-                height={330}
-                alt="right"
-                className="absolute left-0 right-0 top-0 w-[1500px] opacity-15 hidden md:block -z-10"
-              />
-              <div className="flex flex-wrap items-center gap-10 my-20 justify-center md:max-lg:justify-start md:px-0 px-10">
-                {/* <motion.div
-                  variants={getAnimationVariants(0.3)}
-                  initial="out"
-                  animate={historyYield2InView ? "in" : "out"}
-                  className="btc_avg w-[430px] max-md:w-[390px] h-[400px] card relative"
-                >
-                  <div className="avg_inner absolute right-0 bottom-0 pt-5 w-[384px] max-md:w-11/12 h-[364px] overflow-hidden">
-                    <div className="flex justify-between items-center px-5">
-                      <div className="">
-                        <div className="flex">
-                          <h2 className="text-[16px] text-darkPrimText mr-3">
-                            BTC Avg Yield
-                          </h2>
-                          <div className="time_tag flex items-center gap-1 px-[5px] py-[2px]">
-                            {" "}
-                            <Image
-                              src={Calendar}
-                              width={14}
-                              height={14}
-                              alt="right"
-                              className=""
-                            />{" "}
-                            <p className="text-[13px] text-[#A586FE]">
-                              June-28
-                            </p>
-                          </div>
-                        </div>
-                        <h1 className="text-3xl text-white mt-2 brFirma_font">
-                          15.69%
-                        </h1>
-                      </div>
-                      <Image
-                        src={"/PNG/smallChart.png"}
-                        width={98}
-                        height={54}
-                        alt="right"
-                        className="max-sm:hidden"
-                      />
-                    </div>
-                    <div className="mt-5">
-                      <Image
-                        src={"/PNG/btc_table.png"}
-                        width={394}
-                        height={248}
-                        alt="right"
-                        className=""
-                      />
-                    </div>
-                  </div>
-                </motion.div> */}
-                <motion.div
-                  variants={getAnimationVariants(0.3)}
-                  initial="out"
-                  animate={historyYield2InView ? "in" : "out"}
-                  className="btc_avg w-[340px] max-md:w-[390px] h-[400px] card relative"
-                >
-                  <div className="avg_inner absolute right-0 bottom-0 pt-5 w-[300px] max-md:w-11/12 h-[364px]">
-                    <div className="flex justify-between items-center px-5">
-                      <div className="">
-                        <div className="flex">
-                          <h2 className="text-[16px] text-darkPrimText mr-3">
-                          BTC Avg Yield
-                          </h2>
-                          <div className="time_tag flex items-center gap-1 px-[5px] py-[2px]">
-                            {" "}
-                            <Image
-                              src={Calendar}
-                              width={14}
-                              height={14}
-                              alt="right"
-                              className=""
-                            />{" "}
-                            <p className="text-[13px] text-[#A586FE]">Sept-28</p>
-                          </div>
-                        </div>
-                        <h1 className="text-3xl text-white mt-2 brFirma_font">
-                        15.69%
-                        </h1>
-                      </div>
-                    </div>
-                    <div className="mt-7">
-                      <p className="text-white absolute bottom-5 w-[270px] text-[14px] ml-2">
-                        Displaying the average APY for the BTC futures contract
-                        expiring on September
-                      </p>
-                      <Image
-                        src={MediumChartBg}
-                        width={394}
-                        height={248}
-                        alt="right"
-                        className="absolute bottom-0"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-                <motion.div
-                  variants={getAnimationVariants(0.6)}
-                  initial="out"
-                  animate={historyYield2InView ? "in" : "out"}
-                  className="eth_avg w-[340px] max-md:w-[390px] h-[400px] card relative"
-                >
-                  <div className="avg_inner absolute right-0 bottom-0 pt-5 w-[300px] max-md:w-11/12 h-[364px]">
-                    <div className="flex justify-between items-center px-5">
-                      <div className="">
-                        <div className="flex">
-                          <h2 className="text-[16px] text-darkPrimText mr-3">
-                            ETH Avg Yield
-                          </h2>
-                          <div className="time_tag flex items-center gap-1 px-[5px] py-[2px]">
-                            {" "}
-                            <Image
-                              src={Calendar}
-                              width={14}
-                              height={14}
-                              alt="right"
-                              className=""
-                            />{" "}
-                            <p className="text-[13px] text-[#A586FE]">March-24</p>
-                          </div>
-                        </div>
-                        <h1 className="text-3xl text-white mt-2 brFirma_font">
-                          13.61%
-                        </h1>
-                      </div>
-                    </div>
-                    <div className="mt-7">
-                      <p className="text-white absolute bottom-5 w-[270px] text-[14px] ml-2">
-                        Displaying the average APY for the ETH futures contract
-                        expiring on March
-                      </p>
-                      <Image
-                        src={MediumChartBg}
-                        width={394}
-                        height={248}
-                        alt="right"
-                        className="absolute bottom-0"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-                {/* <motion.div
-                  variants={getAnimationVariants(0.9)}
-                  initial="out"
-                  animate={historyYield2InView ? "in" : "out"}
-                  className="max-md:w-[390px] w-[250px] h-[400px] card relative overflow-hidden"
-                >
-                  <Image
-                    src={"/PNG/energy.png"}
-                    width={207}
-                    height={299}
-                    alt="right"
-                    className="absolute top-0 max-md:-top-10 left-1/2 transform -translate-x-1/2 "
-                  />
-                  <div className="px-5 absolute bottom-5">
-                    <h1 className="text-3xl text-white my-2">30% Fast!</h1>
-                    <p className="text-white subtitle_p w-[210px] text-[12px]">
-                      Built for speed with 50ms interactions and real-time sync.
-                    </p>
-                  </div>
-                </motion.div> */}
+                <span className="text-2xl font-bold text-white tracking-tight drop-shadow-lg">BondHive</span>
               </div>
             </div>
-            <motion.div
-              variants={getAnimationVariants(1.2)}
-              initial="out"
-              animate={historyYield2InView ? "in" : "out"}
-              className="md:flex items-center xl:w-[1060px] mx-auto md:px-0 px-10 justify-between"
-            >
-              <p className="subtitle_p md:w-[592px]">
-                For a closer look, please visit our Dune Analytics dashboard.
-                Summarizing, ETH and BTC bonds have shown promising average
-                yields of 13.61% and 16.42% for ETH, and 13.75% and 15.69% for
-                BTC, over the past six months
-              </p>
-              <Link
-                href={
-                  "https://dune.com/socratesstable_sigma/bond-hive-yield-opportunities"
-                }
-                target="_blank"
-              >
-                <button className="mt-10 md:px-5 max-md:w-full">
-                  Open Dune Dashboard
-                </button>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="#home" className="text-white/90 hover:text-white transition-all duration-300 font-medium relative group drop-shadow-sm">
+                Home
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
               </Link>
-            </motion.div>
+              <Link href="#about" className="text-white/90 hover:text-white transition-all duration-300 font-medium relative group drop-shadow-sm">
+                About
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              <Link href="#services" className="text-white/90 hover:text-white transition-all duration-300 font-medium relative group drop-shadow-sm">
+                Services
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              <Link href="#contact" className="text-white/90 hover:text-white transition-all duration-300 font-medium relative group drop-shadow-sm">
+                Contact
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </div>
           </div>
         </div>
+      </nav>
 
-        {/* products */}
-        <OurProducts />
-
-        {/* Become A Partner */}
-        <motion.div
-          ref={becomeRef}
-          className="flex flex-col justify-center items-center my-36 w-full"
-        >
-          <div className="flex flex-col justify-center items-center max-md:w-11/12">
-            <motion.div
-              className=""
-              variants={getAnimationVariants(0)}
-              initial="out"
-              animate={becomeInView ? "in" : "out"}
-            >
-              <Image
-                src={"/PNG/blueBondhive.png"}
-                width={104}
-                height={104}
-                alt="right"
-                className=""
-              />
-            </motion.div>
-            <motion.h1
-              variants={getAnimationVariants(0.3)}
-              initial="out"
-              animate={becomeInView ? "in" : "out"}
-              className="medium_title my-4 md:w-[850px] md:text-[44px] text-[28px] md:leading-[51px]"
-            >
-              Become a partner and integrate bondhive in your app?
-            </motion.h1>
-            <motion.p
-              className="subtitle_nosize text-[18px] text-center"
-              variants={getAnimationVariants(0.6)}
-              initial="out"
-              animate={becomeInView ? "in" : "out"}
-            >
-              Join us now and let&apos;s work wonders together to build a better
-              future
-            </motion.p>
-            <motion.div
-              className=""
-              variants={getAnimationVariants(0.9)}
-              initial="out"
-              animate={becomeInView ? "in" : "out"}
-            >
-              <Link href={"/contact"}> 
-              <button
-                className={`button1 mt-3 inline-flex items-center px-[20px] py-[10px] gap-3 mr-3`}
+      {/* Hero Section */}
+      <section id="home" className="relative py-32 px-6 overflow-hidden min-h-screen flex items-center">
+        <div className="container mx-auto relative z-10">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight drop-shadow-lg">
+              Decentralized Strategy.
+              <br />
+              <span className="text-white/95">Centralized Vision.</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed font-light drop-shadow-sm">
+              Building secure blockchain-based solutions for the future of finance.
+              <br className="hidden md:block" />
+              <span className="text-white/80">Expert Web3 development and strategic advisory services.</span>
+            </p>
+            <div className="flex justify-center">
+              <Button
+                size="lg"
+                onClick={scrollToContact}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm px-12 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-pointer"
               >
-                <div className="">Reach Out</div>
-              </button>
-              </Link>
-            </motion.div>
+                Get in Touch
+              </Button>
+            </div>
           </div>
-        </motion.div>
+        </div>
+      </section>
 
-        <Partners />
+      {/* About Us Section */}
+      <section id="about" className="py-20 px-6 bg-white relative">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">About Us</h2>
+          </div>
 
-        <Footer />
-      </main>
-    </>
-  );
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Company Description Card */}
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gray-900 flex items-center group-hover:text-orange-600 transition-colors duration-300">
+                  <Building className="h-6 w-6 text-orange-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                  Our Mission
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  BondHive Ltd. is a Web3-focused software development and strategic advisory firm. We specialize in
+                  building blockchain-based applications, including DeFi platforms and smart contracts for the next generation of finance.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Enhanced Team Section */}
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gray-900 flex items-center group-hover:text-orange-600 transition-colors duration-300">
+                  <Users className="h-6 w-6 text-orange-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                  Leadership Team
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 hover:from-orange-200 hover:to-orange-100 transition-all duration-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                      F
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Francesco Filippo Tandoi</h4>
+                      <p className="text-gray-600 text-sm">Co-founder / CTO</p>
+                      <p className="text-gray-500 text-xs">4 years full-stack engineering, Smart Contract engineer for hedge funds</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 hover:from-orange-200 hover:to-orange-100 transition-all duration-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                      J
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Jatin Bedi</h4>
+                      <p className="text-gray-600 text-sm">Co-founder / CEO</p>
+                      <p className="text-gray-500 text-xs">Expertise in systematic DeFi trading, Ex-Investment Banker at Nomura</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enhanced Business Details Card */}
+          <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1">
+            <CardHeader>
+              <CardTitle className="text-2xl text-gray-900 flex items-center">
+                <MapPin className="h-6 w-6 text-orange-600 mr-3" />
+                Business Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="p-6 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 hover:shadow-lg transition-all duration-300">
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <Globe className="h-4 w-4 text-orange-600 mr-2" />
+                    Incorporation
+                  </h4>
+                  <p className="text-gray-700">British Virgin Islands</p>
+                </div>
+                <div className="p-6 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 hover:shadow-lg transition-all duration-300">
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <MapPin className="h-4 w-4 text-orange-600 mr-2" />
+                    UK Operating Address
+                  </h4>
+                  <p className="text-gray-700">30 Churchill Place, London, E14 5RE</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Enhanced Services Section */}
+      <section id="services" className="py-20 px-6 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 relative overflow-hidden">
+        {/* Enhanced background patterns */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" fill="none" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="serviceWave1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor: "rgba(255, 255, 255, 0.12)", stopOpacity: 1}} />
+                  <stop offset="100%" style={{stopColor: "rgba(255, 255, 255, 0.06)", stopOpacity: 1}} />
+                </linearGradient>
+                <linearGradient id="serviceWave2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor: "rgba(255, 255, 255, 0.08)", stopOpacity: 1}} />
+                  <stop offset="100%" style={{stopColor: "rgba(255, 255, 255, 0.03)", stopOpacity: 1}} />
+                </linearGradient>
+              </defs>
+              
+              {/* Animated wave patterns */}
+              <path
+                d="M-200 150 Q300 100 600 200 Q900 300 1400 150 L1400 0 L-200 0 Z"
+                fill="url(#serviceWave1)"
+                style={{animation: 'float 10s ease-in-out infinite, pulse 8s ease-in-out infinite'}}
+              />
+              <path
+                d="M-200 400 Q400 300 700 380 Q1000 460 1400 320 L1400 150 Q900 300 600 200 Q300 100 -200 150 Z"
+                fill="url(#serviceWave2)"
+                style={{animation: 'float 15s ease-in-out infinite reverse, pulse 12s ease-in-out infinite'}}
+              />
+              
+              {/* Rotating geometric shapes */}
+              <ellipse cx="200" cy="250" rx="120" ry="60" fill="rgba(255, 255, 255, 0.06)" 
+                       transform="rotate(-15 200 250)"
+                       style={{animation: 'spin 25s linear infinite, pulse 10s ease-in-out infinite'}} />
+              <ellipse cx="1000" cy="350" rx="180" ry="90" fill="rgba(255, 255, 255, 0.04)" 
+                       transform="rotate(20 1000 350)"
+                       style={{animation: 'spin 35s linear infinite reverse, pulse 14s ease-in-out infinite'}} />
+              <ellipse cx="600" cy="500" rx="150" ry="75" fill="rgba(255, 255, 255, 0.08)" 
+                       transform="rotate(-8 600 500)"
+                       style={{animation: 'spin 30s linear infinite, pulse 11s ease-in-out infinite'}} />
+            </svg>
+          </div>
+          
+          {/* Floating particles for services section */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[25%] left-[10%] w-3 h-3 bg-white/20 rounded-full" 
+                 style={{animation: 'float 5s ease-in-out infinite, pulse 3s ease-in-out infinite'}}></div>
+            <div className="absolute top-[60%] right-[15%] w-2 h-2 bg-white/30 rounded-full" 
+                 style={{animation: 'float 7s ease-in-out infinite 2s, pulse 4s ease-in-out infinite'}}></div>
+            <div className="absolute bottom-[30%] left-[30%] w-4 h-4 bg-white/15 rounded-full" 
+                 style={{animation: 'float 6s ease-in-out infinite 1s, pulse 5s ease-in-out infinite'}}></div>
+            <div className="absolute top-[40%] right-[45%] w-2.5 h-2.5 bg-white/25 rounded-full" 
+                 style={{animation: 'float 8s ease-in-out infinite 3s, pulse 6s ease-in-out infinite'}}></div>
+          </div>
+        </div>
+        
+        <div className="container mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">Our Services</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="bg-white border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:rotate-1 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="text-center pb-4 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                  <Code2 className="h-10 w-10 text-white" />
+                </div>
+                <CardTitle className="text-xl text-gray-900 group-hover:text-orange-600 transition-colors duration-300">Blockchain App Development</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center relative z-10">
+                <CardDescription className="text-gray-700 text-base leading-relaxed">
+                  Custom blockchain application development tailored to your business needs with cutting-edge technology
+                  and security.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:-rotate-1 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="text-center pb-4 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:-rotate-12">
+                  <DollarSign className="h-10 w-10 text-white" />
+                </div>
+                <CardTitle className="text-xl text-gray-900 group-hover:text-orange-600 transition-colors duration-300">DeFi Platform Design</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center relative z-10">
+                <CardDescription className="text-gray-700 text-base leading-relaxed">
+                  Design and development of secure, scalable decentralized finance platforms for the modern digital
+                  economy.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:rotate-1 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="text-center pb-4 relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+                <CardTitle className="text-xl text-gray-900 group-hover:text-orange-600 transition-colors duration-300">Smart Contract Consulting</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center relative z-10">
+                <CardDescription className="text-gray-700 text-base leading-relaxed">
+                  Expert consulting and auditing services for smart contract development, security optimization, and
+                  best practices.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+      
+      <section className="py-20 px-6 bg-white relative">
+        <div className="container mx-auto">
+          <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-gray-900 flex items-center justify-center">
+                <Award className="h-6 w-6 text-orange-600 mr-3" />
+                Funding Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <p className="text-gray-700">Currently funded through VC and grant agreements with strategic partners.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Enhanced Contact Section */}
+      <section id="contact" className="py-20 px-6 bg-white pb-32">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">Contact Us</h2>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Enhanced Contact Information Card */}
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gray-900">Get in Touch</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Ready to start your Web3 journey? Contact us today.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 hover:from-orange-200 hover:to-orange-100 transition-all duration-300 group cursor-pointer">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Mail className="h-6 w-6 text-white" />
+                  </div>
+                  <a href="mailto:info@bondhive.xyz" className="text-gray-900 font-medium text-lg group-hover:text-orange-600 transition-colors duration-300">info@bondhive.xyz</a>
+                </div>
+                <div className="flex items-start space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 hover:from-orange-200 hover:to-orange-100 transition-all duration-300 group cursor-pointer">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <MapPin className="h-6 w-6 text-white" />
+                  </div>
+                  <a href="https://maps.google.com/maps?q=30+Churchill+Place,+London,+E14+5RE" target="_blank" rel="noopener noreferrer">
+                    <p className="text-gray-900 font-medium text-lg group-hover:text-orange-600 transition-colors duration-300">30 Churchill Place</p>
+                    <p className="text-gray-700">London, E14 5RE</p>
+                  </a>
+                </div>
+                <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 hover:from-orange-200 hover:to-orange-100 transition-all duration-300 group cursor-pointer">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </div>
+                  <a href="https://x.com/bondhive" target="_blank" rel="noopener noreferrer" className="text-gray-900 font-medium text-lg group-hover:text-orange-600 transition-colors duration-300">@bondhive</a>
+                </div>
+                <div className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 hover:from-orange-200 hover:to-orange-100 transition-all duration-300 group cursor-pointer">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Send className="h-6 w-6 text-white" />
+                  </div>
+                  <a href="https://t.me/bondHive" target="_blank" rel="noopener noreferrer" className="text-gray-900 font-medium text-lg group-hover:text-orange-600 transition-colors duration-300">t.me/bondHive</a>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Enhanced Contact Form Card */}
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-orange-100 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gray-900">Send us a Message</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Fill out the form below and we'll get back to you soon.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <div>
+                    <Label htmlFor="name" className="text-gray-900 font-medium">
+                      Name
+                    </Label>
+                    <Input
+                      id="name"
+                      placeholder="Your full name"
+                      className="bg-white border-orange-200 text-gray-900 placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500 h-12 transition-all duration-300 hover:border-orange-300"
+                      {...register('name')}
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-gray-900 font-medium">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      className="bg-white border-orange-200 text-gray-900 placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500 h-12 transition-all duration-300 hover:border-orange-300"
+                      {...register('email')}
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="message" className="text-gray-900 font-medium">
+                      Message
+                    </Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Tell us about your project..."
+                      className="bg-white border-orange-200 text-gray-900 placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500 min-h-[120px] transition-all duration-300 hover:border-orange-300"
+                      {...register('message')}
+                    />
+                    {errors.message && (
+                      <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>
+                    )}
+                  </div>
+                  
+                  {submitMessage && (
+                    <div className={`p-4 rounded-lg ${
+                      submitMessage.type === 'success' 
+                        ? 'bg-green-50 text-green-700 border border-green-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {submitMessage.text}
+                    </div>
+                  )}
+                  
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 h-12 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Footer - Sticky to bottom, transparent overlay */}
+      <footer className="fixed bottom-0 left-0 right-0 py-3 px-6 relative overflow-hidden z-50">
+        {/* Subtle background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/10 to-transparent backdrop-blur-sm"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-3 mb-2 md:mb-0 group">
+              <div className="relative transform group-hover:scale-110 transition-transform duration-300">
+                <svg width="32" height="32" viewBox="0 0 40 40" fill="none" className="drop-shadow-lg">
+                  <ellipse cx="20" cy="12" rx="18" ry="8" fill="rgba(255, 255, 255, 0.9)" />
+                  <ellipse cx="20" cy="20" rx="16" ry="7" fill="rgba(255, 255, 255, 0.7)" />
+                  <ellipse cx="20" cy="28" rx="18" ry="8" fill="rgba(255, 255, 255, 0.9)" />
+                  <ellipse cx="20" cy="12" rx="12" ry="5" fill="rgba(255, 255, 255, 0.5)" />
+                  <ellipse cx="20" cy="28" rx="12" ry="5" fill="rgba(255, 255, 255, 0.5)" />
+                </svg>
+              </div>
+              <span className="text-lg font-bold text-white tracking-tight drop-shadow-lg">BondHive Ltd.</span>
+            </div>
+            <div className="text-center">
+              <p className="text-white/80 text-xs drop-shadow-sm">
+                BondHive Ltd. is a private limited company incorporated in the British Virgin Islands.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
 }
-
- const useInView: React.FC<{
-  current: any;
-  ref: any;
-  options: any;
-}> = (ref) => {
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsIntersecting(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, [ref]);
-
-  return isIntersecting;
-};

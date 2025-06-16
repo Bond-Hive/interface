@@ -1,11 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
@@ -93,87 +91,4 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Enhanced animations for cooler effects */
-@keyframes float {
-  0%, 100% { 
-    transform: translateY(0px) translateX(0px); 
-  }
-  25% { 
-    transform: translateY(-8px) translateX(2px); 
-  }
-  50% { 
-    transform: translateY(-15px) translateX(-2px); 
-  }
-  75% { 
-    transform: translateY(-8px) translateX(1px); 
-  }
-}
-
-@keyframes spin {
-  from { 
-    transform: rotate(0deg); 
-  }
-  to { 
-    transform: rotate(360deg); 
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { 
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 0.7;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes glow {
-  0%, 100% { 
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-  }
-  50% { 
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-/* Parallax effect for depth */
-.parallax-slow {
-  animation: float 20s ease-in-out infinite;
-}
-
-.parallax-medium {
-  animation: float 15s ease-in-out infinite reverse;
-}
-
-.parallax-fast {
-  animation: float 10s ease-in-out infinite;
-}
-
-/* Enhanced hover effects */
-.hover-lift {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-8px) scale(1.02);
-}
-
-/* Glassmorphism effect */
-.glass {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }

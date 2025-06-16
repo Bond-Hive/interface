@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Orange background for better visibility -->
+  <rect width="32" height="32" fill="#ea580c" rx="4"/>
+  
+  <!-- Stacked ovals/hexagons logo - adapted for favicon size -->
+  <ellipse cx="16" cy="10" rx="12" ry="5" fill="rgba(255, 255, 255, 0.95)"/>
+  <ellipse cx="16" cy="16" rx="10" ry="4.5" fill="rgba(255, 255, 255, 0.8)"/>
+  <ellipse cx="16" cy="22" rx="12" ry="5" fill="rgba(255, 255, 255, 0.95)"/>
+  
+  <!-- Inner details -->
+  <ellipse cx="16" cy="10" rx="8" ry="3" fill="rgba(255, 255, 255, 0.6)"/>
+  <ellipse cx="16" cy="22" rx="8" ry="3" fill="rgba(255, 255, 255, 0.6)"/>
+</svg>
